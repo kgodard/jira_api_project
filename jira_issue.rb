@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-require 'jira-ruby'
+# require 'jira-ruby'
 
 class JiraIssue
 
@@ -11,11 +11,48 @@ class JiraIssue
     load_issue(jira_issue)
   end
 
+  def display
+    # key | parent_summary | summary | assignee | status | cycle_time_in_days OR days_since_start
+    string_arr = []
+    string_arr << truncpad(key, 7)
+    string_arr << truncpad(parent_summary)
+    string_arr << truncpad(summary, 50)
+    string_arr << truncpad(assignee, 20)
+    string_arr << truncpad(status, 20)
+    string_arr << days_or_cycle_time
+    string_arr.join(separator)
+  end
+
+  def separator
+    ' | '
+  end
+
+  def days_or_cycle_time
+    done? ? cycle_time_in_days : days_since_start
+  end
+
+  def truncpad(el, len = 30)
+    trunc(el.to_s, len).ljust(len)
+  end
+
+  def trunc(txt, chars)
+    dotdot = txt.length > chars ? '...' : ''
+    txt[0,chars - dotdot.length] + dotdot
+  end
+
+  def done?
+    !finish_time.nil?
+  end
+
+  def days_since_start
+    ((Time.now - start_time) / 86400).round(1) rescue nil
+  end
+
   def cycle_time_in_days
     if finish_time.nil?
       nil
     else
-      ((finish_time - start_time) / 86400).round(1)
+      ((finish_time - start_time) / 86400).round(1) rescue nil
     end
   end
 
@@ -53,7 +90,7 @@ class JiraIssue
   end
 
   def parent_summary
-    parent["fields"]["summary"]
+    parent["fields"]["summary"] rescue nil
   end
 
   def load_issue(jira_issue)
@@ -71,15 +108,7 @@ class JiraIssue
       @fields      = jira_issue.fields
       @histories   = jira_issue.changelog["histories"]
       @subtasks    = jira_issue.subtasks
-      @parent      = jira_issue.parent
+      @parent      = jira_issue.parent rescue nil
     end
   end
-
-  # def default_options
-  #   { username: 'kim.godard@snapdocs.com',
-  #     password: ENV["JIRA_TOKEN"],
-  #     site: 'http://snapdocs-eng.atlassian.net:443/',
-  #     context_path: '',
-  #     auth_type: :basic }
-  # end
 end
