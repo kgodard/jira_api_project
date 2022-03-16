@@ -6,30 +6,52 @@ require './jira_issue.rb'
 class JiraSearch
 
   attr_reader :client, :search_string, :search_options, :search_results, :issues,
-              :project, :issue_types, :start_time, :status, :skipped_parents
+              :project, :issue_types, :created_time, :statuses, :skipped_parents,
+              :finished_within_weeks, :unfiltered_issues
 
   def initialize(project: default_search_project,
                  issue_types: default_search_issue_types,
-                 start_time: default_search_start_time,
-                 status: default_search_status,
+                 created_time: default_search_created_time,
+                 statuses: default_search_statuses,
                  skipped_parents: default_search_skipped_parents,
                  search_options: default_search_options,
-                 client_options: default_client_options)
-    @client          = JIRA::Client.new(client_options)
-    @project         = project
-    @issue_types     = issue_types
-    @start_time      = start_time
-    @status          = status
-    @skipped_parents = skipped_parents
-    @search_options  = search_options
-    @issues          = []
+                 client_options: default_client_options,
+                 finished_within_weeks: nil
+                )
+    @client                = JIRA::Client.new(client_options)
+    @project               = project
+    @issue_types           = issue_types
+    @created_time          = created_time
+    @statuses              = statuses
+    @skipped_parents       = skipped_parents
+    @search_options        = search_options
+    @finished_within_weeks = finished_within_weeks
+    @unfiltered_issues     = []
+    @issues                = []
     perform_search
-    load_options
+    load_results
+    filter_results
   end
 
-  def load_options
+  def load_results
     search_results.each do |result|
-      issues << JiraIssue.new(result)
+      unfiltered_issues << JiraIssue.new(result)
+    end
+  end
+
+  def filter_results
+    @issues += filtered_issues
+  end
+
+  def filtered_issues
+    if finished_within_weeks.nil?
+      unfiltered_issues
+    else
+      puts "filtering..."
+      unfiltered_issues.select do |ui|
+        puts "issue: #{ui.key} | finished: #{ui.finish_time}"
+        !ui.finish_time.nil? && ui.finish_time >= (Date.today - finished_within_weeks * 7)
+      end
     end
   end
 
@@ -41,6 +63,7 @@ class JiraSearch
   end
 
   def perform_search
+    puts "Search string: #{search_string}"
     @search_results = client.Issue.jql(search_string, search_options)
   end
 
@@ -48,12 +71,12 @@ class JiraSearch
     %w[Task Subtask Story]
   end
 
-  def default_search_start_time
-    '-12w'
+  def default_search_created_time
+    '-24w'
   end
 
-  def default_search_status
-    'Done'
+  def default_search_statuses
+    %w[Done]
   end
 
   def default_search_skipped_parents
@@ -68,9 +91,9 @@ class JiraSearch
     # 'project = CQC AND type in (Task, Subtask, Story) AND created >=-12w AND status = Done and parent not in (CQC-279, CQC-512, CQC-826)'
     [
       "project = #{project}",
-      "type in (#{issue_types.join(', ')})",
-      "created >= #{start_time}",
-      "status = #{status}",
+      "type in (\"#{issue_types.join('", "')}\")",
+      "created >= #{created_time}",
+      "status in (\"#{statuses.join('", "')}\")",
       "parent NOT IN (#{skipped_parents.join(', ')})"
     ].join(' AND ')
   end
