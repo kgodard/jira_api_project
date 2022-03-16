@@ -57,7 +57,7 @@ class JiraSearch
   end
 
   def default_search_skipped_parents
-    %w[CQC-279 CQC-512 CQC-826]
+    %w[CQC-279 CQC-512 CQC-826 CQC-551]
   end
 
   def default_search_project
