@@ -5,13 +5,24 @@ require './jira_issue.rb'
 
 class JiraSearch
 
-  attr_reader :client, :search_string, :search_options, :search_results, :issues
+  attr_reader :client, :search_string, :search_options, :search_results, :issues,
+              :project, :issue_types, :start_time, :status, :skipped_parents
 
-  def initialize(search_string: default_search_string, search_options: default_search_options, client_options: default_client_options)
-    @client = JIRA::Client.new(client_options)
-    @search_string  = search_string
-    @search_options = search_options
-    @issues = []
+  def initialize(project: default_search_project,
+                 issue_types: default_search_issue_types,
+                 start_time: default_search_start_time,
+                 status: default_search_status,
+                 skipped_parents: default_search_skipped_parents,
+                 search_options: default_search_options,
+                 client_options: default_client_options)
+    @client          = JIRA::Client.new(client_options)
+    @project         = project
+    @issue_types     = issue_types
+    @start_time      = start_time
+    @status          = status
+    @skipped_parents = skipped_parents
+    @search_options  = search_options
+    @issues          = []
     perform_search
     load_options
   end
@@ -33,8 +44,35 @@ class JiraSearch
     @search_results = client.Issue.jql(search_string, search_options)
   end
 
-  def default_search_string
-    'project = CQC AND type in (Task, Subtask, Story) AND created >=-12w AND status = Done and parent not in (CQC-279, CQC-512, CQC-826)'
+  def default_search_issue_types
+    %w[Task Subtask Story]
+  end
+
+  def default_search_start_time
+    '-12w'
+  end
+
+  def default_search_status
+    'Done'
+  end
+
+  def default_search_skipped_parents
+    %w[CQC-279 CQC-512 CQC-826]
+  end
+
+  def default_search_project
+    'CQC'
+  end
+
+  def search_string
+    # 'project = CQC AND type in (Task, Subtask, Story) AND created >=-12w AND status = Done and parent not in (CQC-279, CQC-512, CQC-826)'
+    [
+      "project = #{project}",
+      "type in (#{issue_types.join(', ')})",
+      "created >= #{start_time}",
+      "status = #{status}",
+      "parent NOT IN (#{skipped_parents.join(', ')})"
+    ].join(' AND ')
   end
 
   def default_search_options
