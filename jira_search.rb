@@ -35,6 +35,17 @@ class JiraSearch
     filter_results
   end
 
+  def self.show_statuses
+    puts [
+    "To Do",
+    "In Progress",
+    "Ready for Demo",
+    "Pre-Release Validation",
+    "Ready to Release",
+    "Done"
+    ].join("\n")
+  end
+
   def load_results
     search_results.each do |result|
       unfiltered_issues << JiraIssue.new(result, finish_status: finish_status)
