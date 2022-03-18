@@ -2,16 +2,22 @@
 
 class JiraReporter
 
-  attr_reader :issues
+  attr_reader :issues, :sort_by
 
-  def initialize(issues)
+  def initialize(issues, sort_by: nil)
     @issues = issues
+    @sort_by = sort_by
+  end
+
+  def sorted_issues
+    return issues if sort_by.nil?
+    issues.sort_by {|i| [i.send(sort_by.to_sym) ? 0 : 1,i.send(sort_by.to_sym) || 0]}
   end
 
   def report
     puts report_title
     puts double_line
-    issues.each do |issue|
+    sorted_issues.each do |issue|
       puts display(issue)
     end
     puts double_line
@@ -25,8 +31,9 @@ class JiraReporter
     title_arr << truncpad("Assignee", 20)
     title_arr << truncpad("Started", 8)
     title_arr << truncpad("Finished", 8)
-    title_arr << truncpad("Status", 20)
-    title_arr << "Days Since Start/Cycle Time"
+    title_arr << truncpad("Status", 22)
+    title_arr << truncpad("Days Since Start", 16)
+    title_arr << truncpad("Cycle Time", 10)
     title_arr.join(separator)
   end
 
@@ -39,8 +46,9 @@ class JiraReporter
     string_arr << truncpad(issue.assignee, 20)
     string_arr << truncpad(date_display(issue.start_time), 8)
     string_arr << truncpad(date_display(issue.finish_time), 8)
-    string_arr << truncpad(issue.status, 20)
-    string_arr << days_or_cycle_time(issue)
+    string_arr << truncpad(issue.status, 22)
+    string_arr << truncpad(issue.days_since_start, 16)
+    string_arr << truncpad(issue.cycle_time_in_days, 10)
     string_arr.join(separator)
   end
 
@@ -56,9 +64,9 @@ class JiraReporter
     ' | '
   end
 
-  def days_or_cycle_time(issue)
-    issue.done? ? issue.cycle_time_in_days : issue.days_since_start
-  end
+#   def days_or_cycle_time(issue)
+#     issue.done? ? issue.cycle_time_in_days : issue.days_since_start
+#   end
 
   def truncpad(el, len = 30)
     trunc(el.to_s, len).ljust(len)
