@@ -7,7 +7,7 @@ class JiraSearch
 
   attr_reader :client, :search_string, :search_options, :search_results, :issues,
               :project, :issue_types, :created_time, :statuses, :skipped_parents,
-              :finished_within_weeks, :unfiltered_issues
+              :finished_within_weeks, :unfiltered_issues, :finish_status
 
   def initialize(project: default_search_project,
                  issue_types: default_search_issue_types,
@@ -16,7 +16,8 @@ class JiraSearch
                  skipped_parents: default_search_skipped_parents,
                  search_options: default_search_options,
                  client_options: default_client_options,
-                 finished_within_weeks: nil
+                 finished_within_weeks: nil,
+                 finish_status: default_finish_status
                 )
     @client                = JIRA::Client.new(client_options)
     @project               = project
@@ -26,6 +27,7 @@ class JiraSearch
     @skipped_parents       = skipped_parents
     @search_options        = search_options
     @finished_within_weeks = finished_within_weeks
+    @finish_status         = finish_status
     @unfiltered_issues     = []
     @issues                = []
     perform_search
@@ -35,7 +37,7 @@ class JiraSearch
 
   def load_results
     search_results.each do |result|
-      unfiltered_issues << JiraIssue.new(result)
+      unfiltered_issues << JiraIssue.new(result, finish_status: finish_status)
     end
   end
 
@@ -47,9 +49,9 @@ class JiraSearch
     if finished_within_weeks.nil?
       unfiltered_issues
     else
-      puts "filtering..."
+      # puts "filtering..."
       unfiltered_issues.select do |ui|
-        puts "issue: #{ui.key} | finished: #{ui.finish_time}"
+        # puts "issue: #{ui.key} | finished: #{ui.finish_time}"
         !ui.finish_time.nil? && ui.finish_time >= (Date.today - finished_within_weeks * 7)
       end
     end
@@ -65,6 +67,10 @@ class JiraSearch
   def perform_search
     puts "Search string: #{search_string}"
     @search_results = client.Issue.jql(search_string, search_options)
+  end
+
+  def default_finish_status
+    "Done"
   end
 
   def default_search_issue_types

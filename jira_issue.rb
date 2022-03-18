@@ -5,9 +5,10 @@
 class JiraIssue
 
   attr_reader :key, :client, :created, :summary, :description, :status, :fields, :histories,
-    :assignee, :type, :raw, :subtasks, :parent
+    :assignee, :type, :raw, :subtasks, :parent, :finish_status
 
-  def initialize(jira_issue)
+  def initialize(jira_issue, finish_status:)
+    @finish_status = finish_status
     load_issue(jira_issue)
   end
 
@@ -32,7 +33,7 @@ class JiraIssue
   end
 
   def finish_time
-    get_time_of_status_change("Done") rescue nil
+    get_time_of_status_change(finish_status) rescue nil
   end
 
   def get_time_of_status_change(status)
