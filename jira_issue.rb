@@ -53,12 +53,18 @@ class JiraIssue
     end.sort {|a,b| a[:created] <=> b[:created]}
   end
 
-  def parent_type
-    parent["fields"]["issuetype"]["name"]
-  end
-
   def status_histories
     histories.select {|hist| hist["items"].map {|i| i["field"]}.include?("status")}
+  end
+
+  def parent_key
+    return "-" if parent.nil?
+    parent["key"] rescue "-"
+  end
+
+  def parent_type
+    return "-" if parent.nil?
+    parent["fields"]["issuetype"]["name"]
   end
 
   def parent_summary
