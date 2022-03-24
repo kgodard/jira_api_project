@@ -5,6 +5,17 @@ require './jira_issue.rb'
 
 class JiraSearch
 
+  STATUSES = [
+    "To Do",
+    "In Progress",
+    "Ready for Demo",
+    "Pre-Release Validation",
+    "Ready to Release",
+    "Done"
+  ]
+
+  CYCLE_STATUSES = STATUSES.slice(2..5)
+
   attr_reader :client, :search_string, :search_options, :search_results, :issues,
               :project, :issue_types, :created_time, :statuses, :skipped_parents,
               :finished_within_weeks, :unfiltered_issues, :finish_status
@@ -36,14 +47,26 @@ class JiraSearch
   end
 
   def self.show_statuses
-    puts [
-    "To Do",
-    "In Progress",
-    "Ready for Demo",
-    "Pre-Release Validation",
-    "Ready to Release",
-    "Done"
-    ].join("\n")
+    puts STATUSES.join("\n")
+  end
+
+  def status_cycle_times(upto:)
+    cycle_times = []
+    CYCLE_STATUSES.each do |stat|
+      reload_results(finish_status: stat)
+      cycle_times << {status: stat, average_cycle_time: average_cycle_time}
+      break if stat =~ Regexp.new(upto)
+    end
+    cycle_times
+  end
+
+  def reload_results(finish_status:, finished_within_weeks: nil)
+    @finish_status         = finish_status
+    @finished_within_weeks = finished_within_weeks
+    @unfiltered_issues     = []
+    @issues                = []
+    load_results
+    filter_results
   end
 
   def load_results
@@ -89,7 +112,7 @@ class JiraSearch
   end
 
   def default_search_created_time
-    '-24w'
+    '-12w'
   end
 
   def default_search_statuses
@@ -116,7 +139,10 @@ class JiraSearch
   end
 
   def default_search_options
-    {max_results: 100, expand: 'changelog'}
+    { max_results: 100,
+      expand: 'changelog'
+      # fields: [:key, :issuetype, :assignee, :created, :summary, :description, :status]
+    }
   end
 
   def default_client_options
@@ -124,6 +150,7 @@ class JiraSearch
       password: ENV["JIRA_TOKEN"],
       site: 'http://snapdocs-eng.atlassian.net:443/',
       context_path: '',
-      auth_type: :basic }
+      auth_type: :basic,
+      http_debug: false}
   end
 end
