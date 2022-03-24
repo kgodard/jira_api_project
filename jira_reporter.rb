@@ -35,7 +35,7 @@ class JiraReporter
     title_arr << truncpad("Finished", 8)
     title_arr << truncpad("Status", 22)
     title_arr << truncpad("Days Since Start", 16) unless show_cycle_time
-    title_arr << truncpad("Cycle Time", 10) if show_cycle_time
+    title_arr << truncpad("Cycle Time - (#{issues.first.finish_status})", 40) if show_cycle_time
     title_arr.join(separator)
   end
 
@@ -51,7 +51,7 @@ class JiraReporter
     string_arr << truncpad(date_display(issue.finish_time), 8)
     string_arr << truncpad(issue.status, 22)
     string_arr << truncpad(issue.days_since_start, 16) unless show_cycle_time
-    string_arr << truncpad(issue.cycle_time_in_days, 10) if show_cycle_time
+    string_arr << truncpad(issue.cycle_time_in_days, 40) if show_cycle_time
     string_arr.join(separator)
   end
 
