@@ -26,7 +26,7 @@ class JiraReporter
 
   def report_title
     title_arr = []
-    title_arr << truncpad("Key", 7)
+    title_arr << truncpad("Key", 8)
     title_arr << truncpad("Type", 7)
     title_arr << truncpad("Parent", 35)
     title_arr << truncpad("Issue Summary", 60)
@@ -42,7 +42,7 @@ class JiraReporter
   def display(issue)
     # key | parent_summary | summary | assignee | status | cycle_time_in_days OR days_since_start
     string_arr = []
-    string_arr << truncpad(issue.key, 7)
+    string_arr << truncpad(issue.key, 8)
     string_arr << truncpad(issue.type, 7)
     string_arr << truncpad(issue.parent_key + ' ' + issue.parent_summary, 35)
     string_arr << truncpad(issue.summary, 60)
