@@ -18,13 +18,14 @@ class JiraSearch
 
   attr_reader :client, :search_string, :search_options, :search_results, :issues,
               :project, :issue_types, :created_time, :statuses, :skipped_parents,
-              :finished_within_weeks, :unfiltered_issues, :finish_status
+              :finished_within_weeks, :unfiltered_issues, :finish_status, :only_parent
 
   def initialize(project: default_search_project,
                  issue_types: default_search_issue_types,
                  created_time: default_search_created_time,
                  statuses: default_search_statuses,
                  skipped_parents: default_search_skipped_parents,
+                 only_parent: nil,
                  search_options: default_search_options,
                  client_options: default_client_options,
                  finished_within_weeks: nil,
@@ -36,6 +37,7 @@ class JiraSearch
     @created_time          = created_time
     @statuses              = statuses
     @skipped_parents       = skipped_parents
+    @only_parent           = only_parent
     @search_options        = search_options
     @finished_within_weeks = finished_within_weeks
     @finish_status         = finish_status
@@ -134,8 +136,16 @@ class JiraSearch
       "type in (\"#{issue_types.join('", "')}\")",
       "created >= #{created_time}",
       "status in (\"#{statuses.join('", "')}\")",
-      "parent NOT IN (#{skipped_parents.join(', ')})"
+      parent_filter_string
     ].join(' AND ')
+  end
+
+  def parent_filter_string
+    if only_parent
+      "parent = #{only_parent}"
+    else
+      "parent NOT IN (#{skipped_parents.join(', ')})"
+    end
   end
 
   def default_search_options
