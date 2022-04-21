@@ -1,7 +1,3 @@
-#!/usr/bin/env ruby
-
-# require 'jira-ruby'
-
 class JiraIssue
 
   attr_reader :key, :client, :created, :summary, :description, :status, :fields, :histories,

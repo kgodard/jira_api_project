@@ -1,0 +1,22 @@
+#!/bin/bash
+ARGS=""
+whitespace="[[:space:]]"
+
+# verify that $JRP_DIR is set before continuing
+if [[ -z "$JRP_DIR" ]]; then
+  echo ">> JRP_DIR environment variable not defined."
+  exit 1
+fi
+
+for arg in "$@"
+do
+  if [[ $arg =~ $whitespace ]]
+  then
+    arg=\'$arg\'
+  fi
+  ARGS+=" ${arg}"
+done
+
+COMND="(cd $JRP_DIR && ./jrp.rb $ARGS)"
+
+eval $COMND

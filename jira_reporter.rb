@@ -1,6 +1,5 @@
-#!/usr/bin/env ruby
-
 class JiraReporter
+  include DisplayHelpers
 
   attr_reader :issues, :sort_by, :show_cycle_time
 
@@ -16,6 +15,7 @@ class JiraReporter
   def report(sort_by: nil, show_cycle_time: false)
     @sort_by = sort_by
     @show_cycle_time = show_cycle_time
+    puts double_line
     puts report_title
     puts double_line
     sorted_issues.each do |issue|
@@ -61,22 +61,5 @@ class JiraReporter
 
   def double_line
     '=' * report_title.length
-  end
-
-  def separator
-    ' | '
-  end
-
-#   def days_or_cycle_time(issue)
-#     issue.done? ? issue.cycle_time_in_days : issue.days_since_start
-#   end
-
-  def truncpad(el, len = 30)
-    trunc(el.to_s, len).ljust(len)
-  end
-
-  def trunc(txt, chars)
-    dotdot = txt.length > chars ? '...' : ''
-    txt[0,chars - dotdot.length] + dotdot
   end
 end
