@@ -44,7 +44,7 @@ class JiraReporter
     string_arr = []
     string_arr << truncpad(issue.key, 8)
     string_arr << truncpad(issue.type, 7)
-    string_arr << truncpad(issue.parent_key + ' ' + issue.parent_summary, 35)
+    string_arr << truncpad(issue.parent_key.to_s + ' ' + issue.parent_summary.to_s, 35)
     string_arr << truncpad(issue.summary, 60)
     string_arr << truncpad(issue.assignee, 20)
     string_arr << truncpad(date_display(issue.start_time), 8)

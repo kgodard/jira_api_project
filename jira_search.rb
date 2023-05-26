@@ -2,14 +2,16 @@ class JiraSearch
 
   STATUSES = [
     "To Do",
-    "In Progress",
-    "Ready for Demo",
-    "Pre-Release Validation",
-    "Ready to Release",
+    "In Development",
+    "Code Review",
+    "Dev Complete",
+    "Ready for Testing",
+    "In Testing",
+    "Ready for Deployment",
     "Done"
   ]
 
-  CYCLE_STATUSES = STATUSES.slice(2..5)
+  CYCLE_STATUSES = STATUSES.slice(2..7)
 
   attr_reader :client, :search_string, :search_options, :search_results, :issues,
               :project, :issue_types, :created_time, :statuses, :skipped_parents,
@@ -90,6 +92,7 @@ class JiraSearch
 
   def average_cycle_time
     cycle_times = issues.map(&:cycle_time_in_days).compact
+    # puts "cycle times: #{cycle_times.inspect}"
     # delete the most extreme cycle_time
     cycle_times.delete_at(cycle_times.index(cycle_times.max))
     (cycle_times.inject(0.0) {|sum, el| sum + el} / cycle_times.size).round(1)
@@ -121,7 +124,7 @@ class JiraSearch
   end
 
   def default_search_project
-    'CQC'
+    'ADM'
   end
 
   def search_string
@@ -130,8 +133,9 @@ class JiraSearch
       "project = #{project}",
       "type in (\"#{issue_types.join('", "')}\")",
       "created >= #{created_time}",
-      "status in (\"#{statuses.join('", "')}\")",
-      parent_filter_string
+      "status in (\"#{statuses.join('", "')}\")"
+      # ,
+      # parent_filter_string
     ].join(' AND ')
   end
 
@@ -151,11 +155,11 @@ class JiraSearch
   end
 
   def default_client_options
-    { username: 'kim.godard@snapdocs.com',
+    { username: 'kgodard@roadie.com',
       password: ENV["JIRA_TOKEN"],
-      site: 'http://snapdocs-eng.atlassian.net:443/',
+      site: 'http://roadie.atlassian.net:443/',
       context_path: '',
       auth_type: :basic,
-      http_debug: false}
+      http_debug: true}
   end
 end

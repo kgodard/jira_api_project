@@ -25,15 +25,40 @@ class JiraIssue
   end
 
   def start_time
-    get_time_of_status_change("In Progress") rescue nil
+    get_time_of_status_change("In Development") ||
+      get_time_of_status_change_after("To Do") ||
+      get_time_of_status_change_before("Code Review")
   end
 
   def finish_time
-    get_time_of_status_change(finish_status) rescue nil
+    get_time_of_status_change(finish_status) ||
+      get_final_status_time
+  end
+
+  def get_final_status_time
+    return nil unless status == finish_status
+    Time.parse status_changes.last[:created]
+  end
+
+  def get_time_of_status_change_before(status)
+    idx = status_changes.find_index {|sc| sc[:status] == status}
+    return idx if idx.nil?
+    change = status_changes[idx - 1]
+    return change if change.nil?
+    Time.parse change[:created]
+  end
+
+  def get_time_of_status_change_after(status)
+    idx = status_changes.find_index {|sc| sc[:status] == status}
+    return idx if idx.nil?
+    change = status_changes[idx + 1]
+    return change if change.nil?
+    Time.parse change[:created]
   end
 
   def get_time_of_status_change(status)
     change = find_status_change(status)
+    return change if change.nil?
     Time.parse change[:created]
   end
 

@@ -106,6 +106,6 @@ class JiraReportCli
   end
 
   def default_statuses
-    ["Pre-Release Validation", "Ready to Release", "Done"]
+    ["In Testing", "Ready for Deployment", "Done"]
   end
 end
