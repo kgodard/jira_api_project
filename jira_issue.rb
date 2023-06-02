@@ -3,6 +3,8 @@ class JiraIssue
   attr_reader :key, :client, :created, :summary, :description, :status, :fields, :histories,
     :assignee, :type, :raw, :subtasks, :parent, :finish_status
 
+  attr_writer :finish_status
+
   def initialize(jira_issue, finish_status:)
     @finish_status = finish_status
     load_issue(jira_issue)
@@ -25,13 +27,12 @@ class JiraIssue
   end
 
   def start_time
-    get_time_of_status_change("In Development") ||
-      get_time_of_status_change_after("To Do") ||
-      get_time_of_status_change_before("Code Review")
+    get_time_of_status_change_after_first("To Do") ||
+      get_time_of_status_change_before_first("Code Review")
   end
 
   def finish_time
-    get_time_of_status_change(finish_status) ||
+    get_time_of_last_status_change(finish_status) ||
       get_final_status_time
   end
 
@@ -40,7 +41,7 @@ class JiraIssue
     Time.parse status_changes.last[:created]
   end
 
-  def get_time_of_status_change_before(status)
+  def get_time_of_status_change_before_first(status)
     idx = status_changes.find_index {|sc| sc[:status] == status}
     return idx if idx.nil?
     change = status_changes[idx - 1]
@@ -48,7 +49,7 @@ class JiraIssue
     Time.parse change[:created]
   end
 
-  def get_time_of_status_change_after(status)
+  def get_time_of_status_change_after_first(status)
     idx = status_changes.find_index {|sc| sc[:status] == status}
     return idx if idx.nil?
     change = status_changes[idx + 1]
@@ -56,14 +57,14 @@ class JiraIssue
     Time.parse change[:created]
   end
 
-  def get_time_of_status_change(status)
-    change = find_status_change(status)
+  def get_time_of_last_status_change(status)
+    change = find_last_status_change(status)
     return change if change.nil?
     Time.parse change[:created]
   end
 
-  def find_status_change(status)
-    status_changes.detect {|sc| sc[:status] == status}
+  def find_last_status_change(status)
+    status_changes.reverse.detect {|sc| sc[:status] == status}
   end
 
   def status_changes
