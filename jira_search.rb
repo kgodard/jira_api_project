@@ -1,15 +1,8 @@
+require './statuses.rb'
+
 class JiraSearch
 
-  STATUSES = [
-    "To Do",
-    "In Development",
-    "Code Review",
-    "Dev Complete",
-    "Ready for Testing",
-    "In Testing",
-    "Ready for Deployment",
-    "Done"
-  ]
+  include Statuses
 
   CYCLE_STATUSES = STATUSES.slice(2..7)
 
@@ -94,7 +87,7 @@ class JiraSearch
     cycle_times = issues.map(&:cycle_time_in_days).compact
     # puts "cycle times: #{cycle_times.inspect}"
     # delete the most extreme cycle_time
-    cycle_times.delete_at(cycle_times.index(cycle_times.max))
+    # cycle_times.delete_at(cycle_times.index(cycle_times.max))
     (cycle_times.inject(0.0) {|sum, el| sum + el} / cycle_times.size).round(1)
   end
 

@@ -1,4 +1,8 @@
+require './statuses.rb'
+
 class JiraIssue
+
+  include Statuses
 
   attr_reader :key, :client, :created, :summary, :description, :status, :fields, :histories,
     :assignee, :type, :raw, :subtasks, :parent, :finish_status
@@ -33,7 +37,21 @@ class JiraIssue
 
   def finish_time
     get_time_of_last_status_change(finish_status) ||
-      get_final_status_time
+      get_final_status_time ||
+      get_time_of_status_change_after_last_preceding_status(finish_status)
+  end
+
+  def get_time_of_status_change_after_last_preceding_status(status)
+    # get the preceding status from STATUSES
+    preceding_status = STATUSES[STATUSES.index(status)-1]
+    return nil if preceding_status.nil?
+    # get the index of the LAST occurance of the preceding status
+    last_preceding_status_index = status_changes.each_index.select {|i| status_changes[i][:status] == preceding_status}.last
+    return nil if last_preceding_status_index.nil?
+    # get the status immediately after that index and return its time
+    change = status_changes[last_preceding_status_index + 1]
+    return nil if change.nil?
+    Time.parse change[:created]
   end
 
   def get_final_status_time

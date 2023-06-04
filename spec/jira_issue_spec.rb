@@ -1,6 +1,7 @@
 require 'json'
 require 'ostruct'
 require 'time'
+require 'byebug'
 require_relative '../jira_issue.rb'
 
 shared_examples 'cycle_time_in_days' do |finish_status:, result:|
@@ -64,6 +65,18 @@ describe JiraIssue do
   }
 
   subject { JiraIssue.new(search_result, finish_status: test_finish_status) }
+
+  context "named status doesn't exist" do
+    before do
+      expect_any_instance_of(JiraIssue).to receive(:status_changes).at_least(1).times.and_return(test_status_changes)
+    end
+
+    let(:test_finish_status) { "Ready for Deployment" }
+
+    it "uses the status after the preceding status" do
+      expect(subject.finish_time).to eq Time.parse("2023-04-14T15:50:31.567-0400")
+    end
+  end
 
   context "with multiple repeating status changes" do
     before do
